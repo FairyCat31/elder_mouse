@@ -1,0 +1,30 @@
+{
+  "command_prefix": ".",
+  "dynamic_config_file_name": "em.json",
+  "cogs": ["cogs.Main", "cogs.DynamicConfig.DynamicConfig", "cogs.BoostyManager"],
+  "phrases": {
+    "start" : "multiline\n> Successful starting\n> I logged as {user}\n> Starting during: {during_time}"
+  },
+  "buttons": {
+  },
+  "embeds": {
+    "sub_1": {
+      "args": {
+        "title": "Спасибки за подписку",
+        "description": "Чууу, приветствую, {user}! \uD83D\uDC2D Добро пожаловать в нашу уютную норку — проект Юнимайс! Здесь мы не просто играем, а творим эпические (и не очень) истории вместе! \uD83D\uDE1C Готовься к веселью, приключениям и, конечно, кучу сыра... ой, точнее, радости! Если что-то непонятно или нужна помощь, не стесняйся обращаться ко мне, Младшей Мышке! Я всегда готова помочь... ну, или хотя бы посмеяться вместе с тобой! \uD83D\uDE04 Добро пожаловать в семью Юнимайс!",
+        "colour": 15437603
+      },
+      "func_args": [
+        {
+          "func": "image",
+          "args": {
+            "url": "https://i.imgur.com/o2mJJX6.jpeg"
+          }
+        }
+      ],
+      "fields": []
+    }
+  },
+  "modals": {
+  }
+}
