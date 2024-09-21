@@ -1,7 +1,7 @@
 {
   "command_prefix": ".",
   "dynamic_config_file_name": "em.json",
-  "cogs": ["cogs.Main", "cogs.DynamicConfig.DynamicConfig", "cogs.BoostyManager"],
+  "cogs": ["cogs.Main", "cogs.DynamicConfig", "cogs.BoostyManager"],
   "phrases": {
     "start" : "multiline\n> Successful starting\n> I logged as {user}\n> Starting during: {during_time}"
   },
@@ -26,5 +26,10 @@
     }
   },
   "modals": {
+  },
+  "cmds": {
+    "set_cfg": {"name": "cfg_set_param", "description": "Задать новое значение параметру"},
+    "del_cfg": {"name": "cfg_del_param", "description": "Cбросить настройки"},
+    "show_cfg": {"name": "cfg_show", "description": "Показать текущие настройки"}
   }
 }

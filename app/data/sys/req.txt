@@ -3,3 +3,4 @@ python-dotenv==1.0.1
 cryptography==43.0.1
 colorama==0.4.6
 aio-mc-rcon==3.2.2
+json5==0.9.25

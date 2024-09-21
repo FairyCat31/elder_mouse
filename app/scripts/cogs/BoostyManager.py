@@ -1,5 +1,5 @@
 from disnake.ext import commands
-from app.scripts.cogs.DynamicConfig.DynamicConfigHelper import is_cfg_setup
+from app.scripts.cogs.DynamicConfig import DynamicConfigShape as DynConf
 from app.scripts.components.rconmanager import RconManager
 from app.scripts.components.logger import LogType
 from app.scripts.components.smartdisnake import SmartBot, SmartEmbed
@@ -77,12 +77,8 @@ class BoostyManager(commands.Cog):
         did = member.id
 
     @commands.Cog.listener(name="on_member_update")
+    @DynConf.is_cfg_setup("sub_channel", echo=False)
     async def on_member_update(self, before: Member, after: Member):
-        res = is_cfg_setup(self.bot.props["dynamic_config"], "sub_channel")
-        if res:
-            self.bot.log.printf(res)
-            return
-
         new_roles = after.roles
         old_roles = before.roles
         new_is = len(new_roles)

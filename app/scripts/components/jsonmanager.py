@@ -1,9 +1,11 @@
 from json import dump, load, dumps
-from typing import Any, Union, List
+from typing import Any, List
+from json5 import dump as dump5
+from json5 import load as load5
+from re import search as shape_search
 from os.path import exists
 from app.scripts.components.crypter import CrypterDict
 from dotenv import dotenv_values
-
 
 PATH_CONFIG_JSON = "app/data/json/json_conf.json"
 
@@ -18,7 +20,7 @@ class AddressType:
 
 
 class JsonManager:
-    def __init__(self, address_type: str, file_name_or_path: str, smart_create: bool = True):
+    def __init__(self, address_type: str, address: str, smart_create: bool = True):
         """
         Manager for working json files
         """
@@ -28,10 +30,10 @@ class JsonManager:
 
         # set path and name file
         if address_type:
-            self._name = file_name_or_path
+            self._name = address
             self._path = self.json_config[address_type] + self._name
         else:
-            self._path = file_name_or_path
+            self._path = address
             self._name = self._path.split("/")[-1]
         # create dict which will content all data from file.json
         self._buffer = {}
@@ -41,10 +43,21 @@ class JsonManager:
             return
         self.write_in_file()
 
+    # methods for buffer
+
     def __str__(self):
         return dumps(self._buffer)
 
-    def __getitem__(self, item) -> Union[str, int, dict, list, None]:
+    def __path_items(self, line: str) -> List[str]:
+        res_parse = shape_search("<&(.+?)>", line)
+        if res_parse:
+            separator = res_parse.group(1)
+        else:
+            separator = self.json_config["def_separator"]
+        path_items = line.split(separator)
+        return path_items
+
+    def __getitem__(self, item) -> Any:
         # create vars
         item = str(item)
         object_output = self._buffer.copy()
@@ -56,7 +69,7 @@ class JsonManager:
 
         return object_output
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value) -> None:
         # create vars
         key = str(key)
         path_items = self.__path_items(key)
@@ -72,24 +85,16 @@ class JsonManager:
 
             buffer = buffer[k]
 
-    def __path_items(self, line: str) -> List[str]:
-        is_need_break = True
-        separator = self.json_config["def_separator"]
-        if line[0] == "%":
-            i = 0
-            separator = ""
-            for s in line:
-                i += 1
-                if s == "%":
-                    is_need_break = not is_need_break
-                else:
-                    separator += s
+    def keys(self):
+        return self._buffer.keys()
 
-                if is_need_break:
-                    break
-            line = line[i:]
-        path_items = line.split(separator)
-        return path_items
+    def items(self):
+        return self._buffer.items()
+
+    def values(self):
+        return self._buffer.values()
+
+    # manager methods
 
     # write all data from file to buffer
     def load_from_file(self) -> None:
@@ -102,7 +107,7 @@ class JsonManager:
             dump(self._buffer, f, indent=self.json_config["indent"])
 
     # get all content from buffer
-    def get_buffer(self) -> dict[str, Any]:
+    def get_buffer(self) -> dict:
         return self._buffer.copy()
 
     # set content to buffer
@@ -112,13 +117,13 @@ class JsonManager:
 
 class JsonManagerWithCrypt(JsonManager):
     def __init__(self, address_type: str,
-                 file_name_or_path: str,
+                 address: str,
                  crypt_key: bytes = None):
         """
         Manager for working json files with crypt technologies
         """
 
-        super().__init__(address_type=address_type, file_name_or_path=file_name_or_path, smart_create=False)
+        super().__init__(address_type=address_type, address=address, smart_create=False)
         self._crypter = self.__crypter_init(crypt_key)
 
     def __crypter_init(self, crypt_key: bytes) -> CrypterDict:
@@ -140,3 +145,14 @@ class JsonManagerWithCrypt(JsonManager):
         with open(self._path, "rb") as f:
             encrypt_dict_as_bytes = f.read()
             self._buffer = self._crypter.dict_decrypt(encrypt_dict_as_bytes)
+
+
+class JsonManager5(JsonManager):
+    def load_from_file(self) -> None:
+        with open(self._path, "r", encoding=self.json_config["encoding"]) as f:
+            self._buffer = load5(f)
+
+    # write all data from buffer to file
+    def write_in_file(self) -> None:
+        with open(self._path, "w", encoding=self.json_config["encoding"]) as f:
+            dump5(self._buffer, f, indent=self.json_config["indent"])

@@ -31,7 +31,7 @@ class LogType:
 class Logger:
     def __init__(self, module_prefix: str):
         # get conf to logger
-        jsm = JsonManager(address_type=AddressType.FILE, file_name_or_path="logger_conf.json")
+        jsm = JsonManager(AddressType.FILE, "logger_conf.json")
         jsm.load_from_file()
         self.logger_conf = jsm.get_buffer()
         # init class data, prefix

@@ -4,7 +4,7 @@ from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
 from app.scripts.components.jsonmanager import JsonManager, AddressType
 from app.scripts.components.smartdisnake import SmartBot
-from typing import Optional
+from functools import wraps as wrapper_func
 
 
 class ValueConvertorFromUser:
@@ -51,7 +51,7 @@ class DynamicConfigShape(commands.Cog):
     def __init__(self, bot: SmartBot):
         self.bot = bot
         file_name = bot.props["dynamic_config_file_name"]
-        self.dynamic_json = JsonManager(address_type=AddressType.FILE, file_name_or_path=file_name)
+        self.dynamic_json = JsonManager(AddressType.FILE, file_name)
         self.dynamic_json.load_from_file()
         self.__update_dynamic_config__()
 
@@ -64,6 +64,29 @@ class DynamicConfigShape(commands.Cog):
         to
         {par: test}
         """
+
+    @staticmethod
+    def is_cfg_setup(*params, echo=True):
+        def decorator(function):
+            @wrapper_func(function)
+            async def wrapper(self, *args, **kwargs):
+                output = ""
+                for par in params:
+                    if self.bot.props[f"dynamic_config/{par}"] is None:
+                        output = par
+                        break
+                if not output:
+                    await function(self, *args, **kwargs)
+                    return
+                output = f"Parameter \"{output}\" not set. Func can't start correctly"
+                self.bot.log.printf(output, LogType.WARN)
+                if echo:
+                    inter = kwargs["inter"]
+                    await inter.response.send_message(output)
+
+            return wrapper
+        return decorator
+
     def __get_dynamic_config__(self) -> dict[str, Any]:
         dyn_buffer = self.dynamic_json.get_buffer()
         dynamic_config = {}
@@ -76,11 +99,9 @@ class DynamicConfigShape(commands.Cog):
         self.bot.props["dynamic_config"] = self.__get_dynamic_config__()
         self.dynamic_json.write_in_file()
 
-    @commands.slash_command(description="Задать новое значение параметру", name="config_setup")
-    @commands.default_member_permissions(administrator=True)
     async def config_set_param(self, inter: ApplicationCommandInteraction,
-                               parameter,
-                               value):
+                               parameter: str,
+                               value: Any):
         # data type which set in config
         data_type_need = self.dynamic_json[f"{parameter}/type"]
         # data type of value which took user
@@ -100,8 +121,6 @@ class DynamicConfigShape(commands.Cog):
         self.bot.log.printf(f"Параметр {parameter} изменён ---> {convert_value}")
 
     # print all params in discord
-    @commands.slash_command(description="Показать текущие настройки")
-    @commands.default_member_permissions(administrator=True)
     async def config_show(self, inter: ApplicationCommandInteraction):
         sett = self.bot.props["dynamic_config"]
         message = ""
@@ -109,9 +128,7 @@ class DynamicConfigShape(commands.Cog):
             message += f"\n{key} ---> {value}"
         await inter.response.send_message(message)
 
-    @commands.slash_command(description="Показать текущие настройки")
-    @commands.default_member_permissions(administrator=True)
-    async def config_reset(self, inter: ApplicationCommandInteraction, parameter: Optional[str] = ""):
+    async def config_reset(self, inter: ApplicationCommandInteraction, parameter: str = ""):
         if parameter != "ALL":
             self.dynamic_json[f"{parameter}/value"] = None
             self.__update_dynamic_config__()
@@ -124,3 +141,38 @@ class DynamicConfigShape(commands.Cog):
             self.dynamic_json[f"{parameter}/value"] = None
         self.__update_dynamic_config__()
         await inter.response.send_message("Все параметры сброшены")
+
+
+def build(bot: SmartBot):
+    file_name = bot.props["dynamic_config_file_name"]
+    cfg_file = JsonManager(AddressType.FILE, file_name)
+    cfg_file.load_from_file()
+    chs_to_set_param = list(cfg_file.keys())
+    chs_to_del_param = chs_to_set_param.copy()
+    chs_to_del_param.append("ALL")
+
+    class BuildDynamicConfig(DynamicConfigShape):
+        @commands.slash_command(**bot.props["cmds/set_cfg"])
+        @commands.default_member_permissions(administrator=True)
+        async def config_set_param(self, inter,
+                                   parameter: str = commands.Param(choices=chs_to_set_param),
+                                   value: Any = None):
+            await super().config_set_param(inter, parameter, value)
+
+        @commands.slash_command(**bot.props["cmds/del_cfg"])
+        @commands.default_member_permissions(administrator=True)
+        async def config_show(self, inter):
+            await super().config_show(inter)
+
+        @commands.slash_command(**bot.props["cmds/show_cfg"])
+        @commands.default_member_permissions(administrator=True)
+        async def config_reset(self, inter,
+                               parameter: str = commands.Param(choices=chs_to_del_param)):
+            await super().config_reset(inter, parameter)
+
+    return BuildDynamicConfig
+
+
+def setup(bot: SmartBot):
+    build_class = build(bot)
+    bot.add_cog(build_class(bot))
