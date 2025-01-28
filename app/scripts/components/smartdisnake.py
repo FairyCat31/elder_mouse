@@ -1,3 +1,4 @@
+import asyncio
 from disnake.ui import Modal, TextInput, Button, View
 from typing import List, Dict
 from disnake.ext import commands
@@ -5,6 +6,12 @@ from disnake import Embed, ButtonStyle
 from time import time
 from app.scripts.components.logger import Logger, LogType
 from app.scripts.components.jsonmanager import JsonManager, AddressType
+from typing import Coroutine
+# import importlib.util
+# import importlib.machinery
+# import sys
+# from disnake.ext.commands import errors
+
 
 BTN_STYLE_MAP = {
     1: ButtonStyle.primary,
@@ -16,22 +23,55 @@ BTN_STYLE_MAP = {
 
 
 class SmartBot(commands.Bot):
-
-    def __init__(self, name: str, *args, **kwargs):
+    def __init__(self, name: str, **kwargs):
         self.start_time = time()
-        super().__init__(*args, **kwargs)
+        super().__init__(intents=kwargs["intents"], command_prefix=kwargs["command_prefix"])
         self.name = name
+        self._async_tasks_for_queue = []
         self.props = JsonManager(AddressType.FILE, "bot_properties.json")
         self.props.load_from_file()
-        self.log = Logger(module_prefix=name)
+        self.log = Logger(name=name)
 
-    def __repr__(self):
-        return self.name
+    # def _load_from_module_spec(self, spec: importlib.machinery.ModuleSpec, key: str) -> None:
+    #     # precondition: key not in self.__extensions
+    #     lib = importlib.util.module_from_spec(spec)
+    #     sys.modules[key] = lib
+    #     try:
+    #         spec.loader.exec_module(lib)  # type: ignore
+    #     except Exception as e:
+    #         del sys.modules[key]
+    #         raise errors.ExtensionFailed(key, e) from e
+    #
+    #     try:
+    #         m_version =
+    #
+    #     try:
+    #         setup = lib.setup
+    #     except AttributeError:
+    #         del sys.modules[key]
+    #         raise errors.NoEntryPointError(key) from None
+    #
+    #     try:
+    #         setup(self)
+    #     except Exception as e:
+    #         del sys.modules[key]
+    #         self._remove_module_references(lib.__name__)
+    #         self._call_module_finalizers(lib, key)
+    #         raise errors.ExtensionFailed(key, e) from e
+    #     else:
+    #         self.__extensions[key] = lib
+
+    def add_async_task(self, target: Coroutine) -> None:
+        self._async_tasks_for_queue.append(target)
+
+    async def start_async_tasks(self):
+        await asyncio.gather(*self._async_tasks_for_queue)
 
     async def on_ready(self):
         end_time = time()
         delta_time = end_time - self.start_time
-        self.log.printf(self.props["phrases/start"].format(user=self.user, during_time=delta_time))
+        self.log.println(*self.props["def_phrases/start"].format(user=self.user, during_time=delta_time).split("\n"))
+        await asyncio.create_task(self.start_async_tasks())
 
     async def on_command_error(self, context: commands.Context, exception: commands.errors.CommandError) -> None:
         self.log.printf("Ignoring command -> %s" % context.message.content,

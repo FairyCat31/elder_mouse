@@ -4,7 +4,10 @@
       "info_msg": "{user_name} оформил подписку ур. {role_name}"
     },
     "872884999047745556" : {
-      "thx_embed": "sub_1"
+      "thx_embed": "sub_1",
+      "mine_commands": [
+        {"server": "me", "commands": ["list"]}
+      ]
     }
   }
 }

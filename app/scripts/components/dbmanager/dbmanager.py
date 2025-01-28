@@ -1,33 +1,20 @@
 import sqlite3
 from sqlalchemy.engine import create_engine
-from sqlalchemy.engine.base import Connection
+from sqlalchemy.orm import sessionmaker
 from app.scripts.components.jsonmanager import JsonManagerWithCrypt, AddressType
 from sqlalchemy import (
     MetaData
 )
 
 
-CONNECT_SHAPE_URL_MARIADB = "mariadb+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-CONNECT_SHAPE_URL_SQLITE3 = "app/data/local_dbs/{db_name}.db"
-
-
-def get_url_by_dict(data_for_conn: dict) -> str:
-    conn_address = data_for_conn["CONN_URL"].format(
-        DB_USER=data_for_conn["DB_USER"],
-        DB_PASS=data_for_conn["DB_PASS"],
-        DB_HOST=data_for_conn["DB_HOST"],
-        DB_PORT=data_for_conn["DB_PORT"],
-        DB_NAME=data_for_conn["DB_NAME"]
-    )
-    return conn_address
-
-
 class DBType:
     """
 
     """
-    MariaDB = CONNECT_SHAPE_URL_MARIADB
-    SQLite3 = CONNECT_SHAPE_URL_SQLITE3
+    ONLINE_FORMAT = "://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    MariaDB = "mariadb+pymysql" + ONLINE_FORMAT
+    MySQL = "mysql+pymysql" + ONLINE_FORMAT
+    SQLite3 = "app/data/local_dbs/{db_name}.db"
 
 
 class DBManager:
@@ -50,29 +37,43 @@ class DBManager:
         # "DB_NAME": STR
         data_for_conn: dict = self._json_manager.get_buffer().get(database_name)
         data_for_conn["CONN_URL"] = db_type
-        self.engine = create_engine(url=get_url_by_dict(data_for_conn), echo=echo, pool_size=5, max_overflow=10,)
+        conn_url = self.get_url_by_dict(data_for_conn)
+        print(conn_url)
+        self.Engine = create_engine(url=conn_url, echo=echo, pool_size=5, max_overflow=10,)
+        self.Session = sessionmaker(self.Engine)
         self.metadata_obj = MetaData()
 
     @staticmethod
-    def db_connect(func):
+    def get_url_by_dict(data_for_conn: dict) -> str:
+        conn_address = data_for_conn["CONN_URL"].format(**data_for_conn)
+        return conn_address
+
+    def db_connect(self, func):
         """
         Decorator for func, which work with db
         """
-        def wrapper(self, *args, **kwargs):
-            with self.engine.connect() as conn:
-                func(self, conn, *args, **kwargs)
-
+        def wrapper(other_self, *args, **kwargs):
+            with self.Engine.connect() as conn:
+                res = func(other_self, conn, *args, **kwargs)
+                return res
         return wrapper
 
-    @db_connect
-    def create_tables(self, conn: Connection):
-        self.metadata_obj.create_all(conn)
-        conn.commit()
+    def db_session(self, func):
+        def wrapper(other_self, *args, **kwargs):
+            with self.Session() as session:
+                res = func(other_self, session, *args, **kwargs)
+                return res
+        return wrapper
 
-    @db_connect
-    def drop_tables(self, conn: Connection):
-        self.metadata_obj.drop_all(conn)
-        conn.commit()
+    # @db_connect
+    # def create_tables(self, conn: Connection):
+    #     self.metadata_obj.create_all(conn)
+    #     conn.commit()
+    #
+    # @db_connect
+    # def drop_tables(self, conn: Connection):
+    #     self.metadata_obj.drop_all(conn)
+    #     conn.commit()
 
 
 class LiteDBManager:

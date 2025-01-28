@@ -1,6 +1,6 @@
 from aiomcrcon import Client, RCONConnectionError, IncorrectPasswordError
 from app.scripts.components.jsonmanager import JsonManagerWithCrypt, AddressType
-from typing import List, Tuple
+from typing import List
 
 
 class RawRconManager:

@@ -13,7 +13,7 @@ class Sponsor:
         self.sponsor = sponsor
         self.sub = sub
         # dyn vars for minecraft commands
-        self.dyn_vars = self.__get_dyn_var()
+        self.dyn_vars: dict = self.__get_dyn_var()
         self.bonuses = self.__get_role_bonuses(self.sub.id)
         self.bonuses_func = {
             "info_msg": self.send_info_msg,
@@ -32,7 +32,6 @@ class Sponsor:
         default_bonuses = boosty_jsm["subs/default"]
         role_bonuses = boosty_jsm[f"subs/{role_id}"]
         result = {**default_bonuses, **role_bonuses}
-        print(result)
         return result
 
     async def send_info_msg(self, msg_text: str) -> None:
@@ -48,13 +47,15 @@ class Sponsor:
         channel = self.bot.get_channel(self.bot.props["dynamic_config/sub_channel"])
         await channel.send(content=self.sponsor.mention, embed=embed)
 
-    async def run_cmd_on_server(self, data: dict) -> None:
-        rcon_manager = RconManager(data["server"])
-        if rcon_manager.code:
-            self.bot.log.printf(rcon_manager.res, LogType.WARN)
-        response = rcon_manager.cmd(data["commands"], self.dyn_vars)
-        for text, code in response:
-            print(text, code)
+    async def run_cmd_on_server(self, cmd_sessions: list) -> None:
+        for data in cmd_sessions:
+            rcon_manager = RconManager(data["server"])
+            code, res = await rcon_manager.test_connect()
+            if code:
+                self.bot.log.printf(res, LogType.WARN)
+            response = await rcon_manager.cmd(commands=data["commands"], dyn_vars=self.dyn_vars.copy())
+            for text in response[0]:
+                self.bot.log.printf(text)
 
     async def give_all_bonuses(self) -> None:
         for name_func, arg in self.bonuses.items():

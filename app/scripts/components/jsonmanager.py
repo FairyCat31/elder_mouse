@@ -4,10 +4,12 @@ from json5 import dump as dump5
 from json5 import load as load5
 from re import search as shape_search
 from os.path import exists
+import sys
 from app.scripts.components.crypter import CrypterDict
 from dotenv import dotenv_values
 
 PATH_CONFIG_JSON = "app/data/json/json_conf.json"
+launch_path = sys.path[1] + "/"
 
 
 class AddressType:
@@ -25,13 +27,13 @@ class JsonManager:
         Manager for working json files
         """
         # load config for JsonManager in file json_conf.json
-        with open(PATH_CONFIG_JSON, "r") as f:
+        with open(launch_path + PATH_CONFIG_JSON, "r") as f:
             self.json_config = load(f)
 
         # set path and name file
         if address_type:
             self._name = address
-            self._path = self.json_config[address_type] + self._name
+            self._path = launch_path + self.json_config[address_type] + self._name
         else:
             self._path = address
             self._name = self._path.split("/")[-1]
@@ -118,7 +120,7 @@ class JsonManager:
 class JsonManagerWithCrypt(JsonManager):
     def __init__(self, address_type: str,
                  address: str,
-                 crypt_key: bytes = None):
+                 crypt_key: bytes | None = None):
         """
         Manager for working json files with crypt technologies
         """
@@ -126,14 +128,14 @@ class JsonManagerWithCrypt(JsonManager):
         super().__init__(address_type=address_type, address=address, smart_create=False)
         self._crypter = self.__crypter_init(crypt_key)
 
-    def __crypter_init(self, crypt_key: bytes) -> CrypterDict:
+    def __crypter_init(self, crypt_key: bytes | None, encoding="latin1") -> CrypterDict:
         if not crypt_key:
             env_vars = dotenv_values(self.json_config["env_with_crypt_key"])
             str_crypt_key = env_vars["DEFAULT_CRYPT_KEY"]
             crypt_key = str.encode(str_crypt_key, encoding="utf-8")
-
-        crypter = CrypterDict(crypt_key=crypt_key)
-        del env_vars, str_crypt_key, crypt_key
+            del env_vars, str_crypt_key
+        crypter = CrypterDict(crypt_key=crypt_key, encoding=encoding)
+        del crypt_key
         return crypter
 
     def write_in_file(self) -> None:
