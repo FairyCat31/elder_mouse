@@ -1,16 +1,15 @@
-import disnake
+from utils.logger import Logger, PrintHandler, ErrorHandler
+from utils.ujson import JsonManager, AddressType
+from utils.smartdisnake import SmartBot
 from dotenv import dotenv_values
-from components.jsonmanager import JsonManager, AddressType
-from components.logger import Logger, PrintHandler, ErrorHandler
+from disnake import Intents
 import sys
-from components.smartdisnake import SmartBot
-# from console_manager import Console
 
 
 class BotManager:
-    def __init__(self, debug_mode: bool = True, advanced_logging: bool = True, **kwargs):
+    def __init__(self, debug_mode: bool = True, advanced_logging: bool = True):
         # init logger and redirect standard err and out streams to logger
-        self.log = Logger(name="Bot Manager", debug_mess=debug_mode)
+        self.log = Logger(name="Bot Manager", debug_mode=debug_mode)
         self._debug_mode = debug_mode
         if advanced_logging:
             sys.stderr = ErrorHandler(self.log)
@@ -26,9 +25,9 @@ class BotManager:
     def init_bot(self, **kwargs):
         command_prefix = self.json_manager["command_prefix"]
         self.log.printf(self.bot_man_props["init_bot"])
-        intents = disnake.Intents.all()
+        intents = Intents.all()
         self.bot = SmartBot(intents=intents, command_prefix=command_prefix, **kwargs)
-        self.bot.log.set_debug_logging(self._debug_mode)
+        self.bot.log.debug_mode = self._debug_mode
         for cog in self.json_manager["cogs"]:
             self.log.printf(self.bot_man_props["import_cog"].format(cog=cog))
             self.bot.load_extension(cog)

@@ -1,12 +1,9 @@
-import sys
-import os
+from utils.ujson import AddressType, JsonManagerWithCrypt
 from factory.errors import FactoryStartArgumentError
+from sys import argv as sys_argv
+from json import loads, dumps
 from typing import Any
-from json import loads
-from json import dumps
-sys.path.insert(1, os.path.join(sys.path[0].replace("/app/scripts", "")))
 import bot_manager
-from components.jsonmanager import AddressType, JsonManagerWithCrypt
 
 
 __all__ = [
@@ -46,13 +43,13 @@ class ArgParser:
     def parse_args(self, main_obj, procs_obj) -> int:
         # start parsing
 
-        len_args = len(sys.argv)
+        len_args = len(sys_argv)
         # check if set args
         if len_args == 1:
             self.code = 3
 
         for i in range(1, len_args):
-            arg = sys.argv[i]
+            arg = sys_argv[i]
             # check is correct format
             if arg[0] != "-":
                 self.code = 1
@@ -81,9 +78,19 @@ class ArgParser:
 
 
 class StartProcedures:
+
+    @staticmethod
+    def h():
+        return StartProcedures.help()
+
+    @staticmethod
+    def help():
+        print("""
+ALL START ARGS""")
+
     @staticmethod
     def launch_bot(**kwargs):
-        bm = bot_manager.BotManager(**kwargs)
+        bm = bot_manager.BotManager(debug_mode=kwargs["debug_mode"], advanced_logging=kwargs["advanced_logging"])
         bm.init_bot(**kwargs)
         bm.run_bot()
 
@@ -102,18 +109,18 @@ class StartProcedures:
         if name:
             print(dumps(jsm[name], indent=2))
         else:
-            print(dumps(jsm.get_buffer(), indent=2))
+            print(dumps(jsm.buffer, indent=2))
 
     @staticmethod
     def del_db(name: str = ""):
         jsm = JsonManagerWithCrypt(AddressType.CFILE, ".dbs.crptjson")
         jsm.load_from_file()
-        b = jsm.get_buffer()
+        b = jsm.buffer
         if name:
             del b[name]
         else:
             b = {}
-        jsm.set_buffer(b)
+        jsm.buffer = b
         jsm.write_in_file()
 
     @staticmethod

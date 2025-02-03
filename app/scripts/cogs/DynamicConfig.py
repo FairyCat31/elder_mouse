@@ -1,9 +1,9 @@
 from typing import Any, List, Dict, Callable
 from disnake import ApplicationCommandInteraction, Role
-from app.scripts.components.logger import LogType
+from app.scripts.utils.logger import LogType
 from disnake.ext import commands
-from app.scripts.components.jsonmanager import JsonManager, AddressType
-from app.scripts.components.smartdisnake import SmartBot
+from app.scripts.utils.ujson import JsonManager, AddressType
+from app.scripts.utils.smartdisnake import SmartBot
 from functools import wraps as wrapper_func
 
 
@@ -107,7 +107,7 @@ class DynamicConfigShape(commands.Cog):
     """
 
     def __get_dynamic_config(self) -> Dict[str, Any]:
-        dyn_buffer = self.dynamic_json.get_buffer()
+        dyn_buffer = self.dynamic_json.buffer
         dynamic_config = {}
         for key in dyn_buffer.keys():
             dynamic_config[key] = self.dynamic_json[f"{key}/value"]
@@ -160,7 +160,7 @@ class DynamicConfigShape(commands.Cog):
             self.dynamic_json[f"{parameter}/value"] = None
             self.__update_dynamic_config()
         else:
-            buffer = self.dynamic_json.get_buffer()
+            buffer = self.dynamic_json.buffer
             parameters = buffer.keys()
             for parameter in parameters:
                 self.dynamic_json[f"{parameter}/value"] = None
@@ -197,24 +197,6 @@ def build(bot: SmartBot):
         async def config_reset(self, inter,
                                parameter: str = commands.Param(choices=chs_to_del_param)):
             await super().config_reset(inter, parameter)
-
-        # @commands.slash_command(**bot.props["cmds/set_cfg"])
-        # @commands.default_member_permissions(administrator=True)
-        # async def config_set_param(self, inter,
-        #                            parameter: str = commands.Param(choices=chs_to_set_param),
-        #                            value: Any = None):
-        #     await super().config_set_param(inter, parameter, value)
-        #
-        # @commands.slash_command(**bot.props["cmds/del_cfg"])
-        # @commands.default_member_permissions(administrator=True)
-        # async def config_show(self, inter):
-        #     await super().config_show(inter)
-        #
-        # @commands.slash_command(**bot.props["cmds/show_cfg"])
-        # @commands.default_member_permissions(administrator=True)
-        # async def config_reset(self, inter,
-        #                        parameter: str = commands.Param(choices=chs_to_del_param)):
-        #     await super().config_reset(inter, parameter)
 
     return BuildDynamicConfig
 

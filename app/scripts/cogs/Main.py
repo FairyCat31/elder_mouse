@@ -1,5 +1,5 @@
 from disnake.ext import commands
-from app.scripts.components.smartdisnake import SmartBot
+from app.scripts.utils.smartdisnake import SmartBot
 
 
 class Main(commands.Cog):

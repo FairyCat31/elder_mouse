@@ -4,17 +4,18 @@ from app.scripts.components.rconmanager import RconManager
 from app.scripts.components.logger import LogType
 from app.scripts.components.smartdisnake import SmartBot, SmartEmbed
 from app.scripts.components.jsonmanager import JsonManager, AddressType
+from app.scripts.cogs.BM.DBHelper import DBManagerForBoosty
 from disnake import Member, Role
 
 
 class Sponsor:
-    def __init__(self, bot: SmartBot, sponsor: Member, sub: Role):
+    def __init__(self, bot: SmartBot, sponsor: Member, subscribe_role: Role):
         self.bot = bot
-        self.sponsor = sponsor
-        self.sub = sub
+        self.sponsor: Member = sponsor
+        self.subscribe_role: Role = subscribe_role
         # dyn vars for minecraft commands
-        self.dyn_vars: dict = self.__get_dyn_var()
-        self.bonuses = self.__get_role_bonuses(self.sub.id)
+        self.dyn_vars: dict = {}
+        self.bonuses = self.__get_role_bonuses(self.subscribe_role.id)
         self.bonuses_func = {
             "info_msg": self.send_info_msg,
             "thx_embed": self.send_thx_embed,
@@ -22,17 +23,16 @@ class Sponsor:
         }
 
     @staticmethod
-    def __get_dyn_var():
-        return {}
-
-    @staticmethod
     def __get_role_bonuses(role_id: int) -> dict:
         boosty_jsm = JsonManager(AddressType.FILE, "boostysub.json")
         boosty_jsm.load_from_file()
-        default_bonuses = boosty_jsm["subs/default"]
-        role_bonuses = boosty_jsm[f"subs/{role_id}"]
-        result = {**default_bonuses, **role_bonuses}
-        return result
+        bonuses = {}
+        for bonus_name, bonus_data in boosty_jsm["subs/default"].items():
+            bonuses.setdefault(bonus_name, bonus_data)
+        for bonus_name, bonus_data in boosty_jsm[f"subs/{role_id}"].items():
+            bonuses[bonus_name] = bonus_data
+
+        return bonuses
 
     async def send_info_msg(self, msg_text: str) -> None:
         if not msg_text:
@@ -53,7 +53,7 @@ class Sponsor:
             code, res = await rcon_manager.test_connect()
             if code:
                 self.bot.log.printf(res, LogType.WARN)
-            response = await rcon_manager.cmd(commands=data["commands"], dyn_vars=self.dyn_vars.copy())
+            response = await rcon_manager.cmd(*data["commands"], dyn_vars=self.dyn_vars.copy())
             for text in response[0]:
                 self.bot.log.printf(text)
 
@@ -66,9 +66,13 @@ class Sponsor:
 class BoostyManager(commands.Cog):
     def __init__(self, bot: SmartBot):
         self.bot = bot
+        self.db = DBManagerForBoosty()
         self.boosty_jsm = JsonManager(AddressType.FILE, "boostysub.json")
         self.boosty_jsm.load_from_file()
         self.boosty_roles_id = self.boosty_jsm["subs"].keys()
+
+        idcheck = self.db.get_minecraft_name(573129166132740096)
+        print(idcheck)
 
     async def on_boosty_role_add(self, member: Member, new_role: Role):
         sponsor = Sponsor(self.bot, member, new_role)
@@ -78,7 +82,7 @@ class BoostyManager(commands.Cog):
         did = member.id
 
     @commands.Cog.listener(name="on_member_update")
-    @DynConf.is_cfg_setup("sub_channel", echo=False)
+    @DynConf.is_cfg_setup("boosty_channel", echo=False)
     async def on_member_update(self, before: Member, after: Member):
         new_roles = after.roles
         old_roles = before.roles
@@ -88,31 +92,25 @@ class BoostyManager(commands.Cog):
         if new_is == old_is:
             return
         # catch edited role and handler function
-        role_edited = None
-        handler_func = None
         if new_is > old_is:
             handler_func = self.on_boosty_role_add
-            for i in range(new_is-1):
-                if new_roles[i].name == old_roles[i].name:
-                    continue
-                role_edited = new_roles[i]
-                break
-            if role_edited is None:
-                role_edited = new_roles[-1]
-        elif old_is > new_is:
+            bigger, smaller = new_roles, old_roles
+        else:
+            bigger, smaller = old_roles, new_roles
             handler_func = self.on_boosty_role_del
-            for i in range(old_is-1):
-                if new_roles[i].name == old_roles[i].name:
-                    continue
-                role_edited = old_roles[i]
+
+        edited_role = None
+        for role in bigger:
+            if role not in smaller:
+                edited_role = role
                 break
-            if role_edited is None:
-                role_edited = old_roles[-1]
+
         # check if edited role from boosty subs
-        if str(role_edited.id) not in self.boosty_roles_id:
+        if str(edited_role) not in self.boosty_roles_id:
             return
+        print(edited_role.id, edited_role.name)
         # handling edit role event by special func for bot
-        await handler_func(after, role_edited)
+        await handler_func(after, edited_role)
 
 
 def setup(bot: SmartBot):

@@ -1,10 +1,8 @@
 import sqlite3
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.scripts.components.jsonmanager import JsonManagerWithCrypt, AddressType
-from sqlalchemy import (
-    MetaData
-)
+from app.scripts.utils.ujson import JsonManagerWithCrypt, AddressType
+from sqlalchemy import MetaData
 
 
 class DBType:
@@ -35,7 +33,7 @@ class DBManager:
         # "DB_USER": STR
         # "DB_PASS": STR
         # "DB_NAME": STR
-        data_for_conn: dict = self._json_manager.get_buffer().get(database_name)
+        data_for_conn: dict = self._json_manager.buffer.get(database_name)
         data_for_conn["CONN_URL"] = db_type
         conn_url = self.get_url_by_dict(data_for_conn)
         print(conn_url)

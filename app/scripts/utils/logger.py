@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.scripts.components.jsonmanager import JsonManager, AddressType
+from app.scripts.utils.ujson import JsonManager, AddressType
 from sys import stdout, path as sys_path
 from typing import TextIO
 from colorama import init, Fore, Style
@@ -37,14 +37,21 @@ class Colors:
 
 # main class of this module
 class Logger:
-    def __init__(self, name: str, debug_mess: int = None,  out_stream: TextIO = None):
+    """
+    Class for logging all info with timestamps, file saving and coloring
+    """
+    def __init__(self, name: str, debug_mode: bool = None,  out_stream: TextIO = None):
+        """
+        name - this is a prefix, which logger will use
+        debug_mode - if logger need to skip DEBUG message
+        """
         # get conf to logger
         self.cfg = JsonManager(AddressType.FILE, "logger_conf.json")
         self.cfg.load_from_file()
         self.out_stream = out_stream
         if out_stream is None:
             self.out_stream = stdout.orig_out_stream if isinstance(stdout, PrintHandler) else stdout
-        self._debug_mess = debug_mess
+        self._debug_mode = debug_mode
         # init class data, prefix
         self.name = name
         self.__old_date = ""
@@ -54,8 +61,13 @@ class Logger:
     def __str__(self):
         return self.name
 
-    def set_debug_logging(self, enable: bool):
-        self._debug_mess = enable
+    @property
+    def debug_mode(self) -> bool:
+        return self._debug_mode
+
+    @debug_mode.setter
+    def debug_mode(self, value: bool):
+        self._debug_mode = value
 
     @staticmethod
     def __get_str_datetime(time, datetime_format: str) -> str:
@@ -67,7 +79,6 @@ class Logger:
         if self.__old_date != new_date:
             # create new file
             self.__path_to_log_file = f"{launch_path}/{self.cfg['default_path']}{self.name}_{new_date}.txt"
-            print(self.__path_to_log_file)
             with open(self.__path_to_log_file, "w", encoding=self.cfg["encoding"]) as file:
                 file.write(f"Logger version | Log of module --> {self.name}\n")
             self.__old_date = new_date
@@ -76,7 +87,13 @@ class Logger:
             file.write(line)
 
     # print info
-    def printf(self, line: str, log_type: int = 0, end: str = "\n", watermark: bool = True, log_text_in_file: bool = True):
+    def printf(self,
+               line: str,
+               log_type: int = 0,
+               end: str = "\n",
+               watermark: bool = True,
+               log_text_in_file: bool = True):
+        """ PRINT ONE LINE"""
         now_int_time = datetime.now()
         now_date = self.__get_str_datetime(now_int_time, self.cfg["date_format"])
         now_time = self.__get_str_datetime(now_int_time, self.cfg["time_format"])
@@ -104,14 +121,26 @@ class Logger:
             # add text to file
             self.__add_note(f_line, now_date)
 
-    def println(self, *lines: str, log_type: int = 0, end: str = "\n", watermark: bool = True, log_text_in_file: bool = True):
+    def println(self,
+                *lines: str,
+                log_type: int = 0,
+                end: str = "\n",
+                watermark: bool = True,
+                log_text_in_file: bool = True):
+        """ PRINT MANY LINES"""
         for line in lines:
             self.printf(line, log_type=log_type, end=end, watermark=watermark, log_text_in_file=log_text_in_file)
 
 
 class PrintHandler:
+    """ Class for the handling stdout stream"""
     def __init__(self, logger: Logger, orig_out_stream: TextIO = stdout,
                  save_to_file: bool = False):
+        """
+            logger - Bot logger object
+            orig_out_stream - original stdout object
+            save_to_file - is need to save DEBUG messages in file
+        """
         self.log = logger
         self._orig_out_stream = orig_out_stream
         self._out_text = ""
@@ -137,7 +166,9 @@ class PrintHandler:
 
 
 class ErrorHandler:
+    """ Class for the handling stdout stream"""
     def __init__(self, logger: Logger):
+        """ logger - Bot logger object """
         self.log = logger
 
     def flush(self):
@@ -154,4 +185,3 @@ class ErrorHandler:
             self.log.printf(lines[-1], log_type=LogType.FATAL, end="")
         else:
             self.log.printf(message, log_type=LogType.FATAL, watermark=False, end="")
-

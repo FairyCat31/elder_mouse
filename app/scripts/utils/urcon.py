@@ -1,26 +1,31 @@
 from aiomcrcon import Client, RCONConnectionError, IncorrectPasswordError
-from app.scripts.components.jsonmanager import JsonManagerWithCrypt, AddressType
+from app.scripts.utils.ujson import JsonManagerWithCrypt, AddressType
 from typing import List
 
 
 class RawRconManager:
+    """
+    Class for working with rcon connections on low lvl
+    """
     def __init__(self, host: str, port: int, password: str):
+        """
+            host - address minecraft server
+            port - port for rcon socket (see server.properties)
+            password - password for rcon (see server.properties)
+        """
         self.__connect_data = {
             "host": host,
             "port": port,
             "password": password
         }
-        code, res = self.__test_connect(**self.__connect_data)
+        code, res = self.test_connect()
         self.code, self.res = code, res
 
-    @staticmethod
-    async def __test_connect(conn_data: dict) -> (int, str):
+    async def test_connect(self) -> (int, str):  # func for test connection
         try:
-            client = Client(**conn_data)
-            await client.connect()
-            await client.close()
-            res = "Ok!"
-            code = 0
+            async with Client(**self.__connect_data) as _:
+                res = "Ok!"
+                code = 0
         except RCONConnectionError:
             res = "RCONConnectionError: An error occurred whilst connecting to the server..."
             code = 1
@@ -39,12 +44,19 @@ class RawRconManager:
 
 
 class RconManager(RawRconManager):
-    def __init__(self, conn_name_server: str):
+    """
+    Class for working with rcon connection on high lvl
+    """
+    def __init__(self, name_server: str):
+        """
+        name_server - server name from file rcon_servers.crptjson
+        """
         jsm = JsonManagerWithCrypt(AddressType.CFILE, "rcon_servers.crptjson")
         jsm.load_from_file()
-        server_conn_data = jsm[f"servers/{conn_name_server}"]
+        server_conn_data = jsm[f"servers/{name_server}"]
         super().__init__(**server_conn_data)
 
+    # method for executing commands on the server
     @RawRconManager.rcon_connect
     async def cmd(self, client: Client, commands: List[str], dyn_vars: dict) -> (list, list):
         texts, codes = [], []
