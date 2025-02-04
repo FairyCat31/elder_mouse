@@ -1,4 +1,4 @@
-from app.scripts.components.dbmanager.dbmanager import DBManager, DBType
+from app.scripts.utils.dbmanager.dbmanager import DBManager, DBType
 from app.scripts.cogs.BM.models import User
 from sqlalchemy.orm import Session
 from sqlalchemy import select

@@ -3,6 +3,7 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.scripts.utils.ujson import JsonManagerWithCrypt, AddressType
 from sqlalchemy import MetaData
+from app.scripts.factory.errors import DatabaseConnectionDataError, DatabaseNameError
 
 
 class DBType:
@@ -33,7 +34,14 @@ class DBManager:
         # "DB_USER": STR
         # "DB_PASS": STR
         # "DB_NAME": STR
+
         data_for_conn: dict = self._json_manager.buffer.get(database_name)
+        if data_for_conn is None:
+            raise DatabaseNameError(database_name)
+        else:
+            for par in ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASS", "DB_NAME"]:
+                if data_for_conn.get(par) is None:
+                    raise DatabaseConnectionDataError(database_name, par)
         data_for_conn["CONN_URL"] = db_type
         conn_url = self.get_url_by_dict(data_for_conn)
         print(conn_url)
@@ -46,20 +54,22 @@ class DBManager:
         conn_address = data_for_conn["CONN_URL"].format(**data_for_conn)
         return conn_address
 
-    def db_connect(self, func):
+    @staticmethod
+    def db_connect(func):
         """
         Decorator for func, which work with db
         """
-        def wrapper(other_self, *args, **kwargs):
+        def wrapper(self, *args, **kwargs):
             with self.Engine.connect() as conn:
-                res = func(other_self, conn, *args, **kwargs)
+                res = func(self, conn, *args, **kwargs)
                 return res
         return wrapper
 
-    def db_session(self, func):
-        def wrapper(other_self, *args, **kwargs):
+    @staticmethod
+    def db_session(func):
+        def wrapper(self, *args, **kwargs):
             with self.Session() as session:
-                res = func(other_self, session, *args, **kwargs)
+                res = func(self, session, *args, **kwargs)
                 return res
         return wrapper
 

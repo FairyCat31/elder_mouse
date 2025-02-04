@@ -1,5 +1,6 @@
 from aiomcrcon import Client, RCONConnectionError, IncorrectPasswordError
 from app.scripts.utils.ujson import JsonManagerWithCrypt, AddressType
+from app.scripts.factory.errors import RCONNameError, RCONConnectionDataError
 from typing import List
 
 
@@ -53,7 +54,13 @@ class RconManager(RawRconManager):
         """
         jsm = JsonManagerWithCrypt(AddressType.CFILE, "rcon_servers.crptjson")
         jsm.load_from_file()
-        server_conn_data = jsm[f"servers/{name_server}"]
+        server_conn_data = jsm.buffer.get(name_server)
+        if server_conn_data is None:
+            raise RCONNameError(name_server)
+        else:
+            for key in ["host", "port", "password"]:
+                if key not in server_conn_data:
+                    raise RCONConnectionDataError(name_server, key)
         super().__init__(**server_conn_data)
 
     # method for executing commands on the server

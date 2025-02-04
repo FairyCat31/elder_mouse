@@ -89,8 +89,8 @@ class SmartRegModal(Modal):
 
 
 class SmartEmbed(Embed):
-    def __init__(self, cfg: dict, **kwargs):
-        map_args = {
+    def __init__(self, cfg: dict):
+        embed_funcs = {
             "thumbnail": super().set_thumbnail,
             "author": super().set_author,
             "footer": super().set_footer,
@@ -98,20 +98,18 @@ class SmartEmbed(Embed):
 
         }
 
-        args: Dict[str, str] = {} if cfg.get("args") is None else cfg["args"]
-        func_args: List[dict] = [] if cfg.get("func_args") is None else cfg["func_args"]
-        fields: List[Dict] = [] if cfg.get("fields") is None else cfg["fields"]
-        super().__init__(
-            **args,
-            **kwargs
-        )
-        for field in fields:
-            super().add_field(**field)
+        super().__init__(title=cfg.get("title"),
+                         description=cfg.get("description"),
+                         url=cfg.get("url"),
+                         color=cfg.get("color"))
 
-        for func_arg in func_args:
-            func = map_args[func_arg["func"]]
-            args = func_arg["args"]
-            func(**args)
+        if cfg.get("fields") is not None:
+            super().add_field(name=cfg.get("name"), value=cfg.get("value"), inline=cfg.get("inline"))
+
+        for key in embed_funcs:
+            if cfg.get(key) is None:
+                continue
+            embed_funcs[key](**cfg[key])
 
 
 class ButtonView(View):

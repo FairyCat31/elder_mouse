@@ -122,7 +122,8 @@ class JsonManagerWithCrypt(JsonManager):
     """
     def __init__(self, address_type: str,
                  address: str,
-                 crypt_key: bytes | None = None):
+                 crypt_key: bytes | None = None,
+                 smart_create: bool = True):
         """
         address_type - use class AddressType for setting this parameter
         address - file path
@@ -131,6 +132,9 @@ class JsonManagerWithCrypt(JsonManager):
 
         super().__init__(address_type=address_type, address=address, smart_create=False)
         self._crypter = self.__crypter_init(crypt_key)
+
+        if smart_create and not exists(self._path):
+            self.write_in_file()
 
     def __crypter_init(self, crypt_key: bytes | None, encoding="latin1") -> Crypter:  # method for creating crypter
         if not crypt_key:

@@ -38,3 +38,41 @@ class FactoryRequirementVersionError(Exception):
         msg = (f"Version of the module \"{module_name}\" is incorrect." +
                f" Need version ({n_ver}.x ver.) | Have ({h_ver} ver.)")
         super().__init__(msg)
+
+
+class DatabaseNameError(Exception):
+    """Exception for error in the load connection data for DB
+    Attributes:
+        name - database's name"""
+
+    def __init__(self, name: str):
+        super().__init__(f"Connection data for database \"{name}\" are not found.")
+
+
+class DatabaseConnectionDataError(Exception):
+    """Exception for error in the validation connection data for DB
+    Attributes:
+        name - database's name
+        par - parameter's name"""
+
+    def __init__(self, name: str, par: str):
+        super().__init__(f"Parameter \"{par}\" for database \"{name}\" are not found.")
+
+
+class RCONNameError(Exception):
+    """Exception for error in the load connection data for RCON SOCKET
+    Attributes:
+        name - database's name"""
+
+    def __init__(self, name: str):
+        super().__init__(f"Connection data for rcon socket \"{name}\" are not found.")
+
+
+class RCONConnectionDataError(Exception):
+    """Exception for error in the validation connection data RCON SOCKET
+    Attributes:
+        name - database's name
+        par - parameter's name"""
+
+    def __init__(self, name: str, par: str):
+        super().__init__(f"Parameter \"{par}\" for rcon socket \"{name}\" are not found.")

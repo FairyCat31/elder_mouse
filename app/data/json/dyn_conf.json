@@ -1,0 +1,12 @@
+{
+  "dm_moder_role": {
+    "type": "INT",
+    "desc": "",
+    "value": null
+  },
+  "boosty_channel": {
+    "type": "INT",
+    "desc": "",
+    "value": 1308853755319685160
+  }
+}

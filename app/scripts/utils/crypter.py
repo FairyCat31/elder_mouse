@@ -76,6 +76,7 @@ class Crypter(CrypterConvertor):
         """ Func for decrypt bytes
         Scheme
         Encrypted bytes -> Bytes"""
+        assert line, f"{line=}"
         decrypt_data = self.__fernet.decrypt(line)  # decrypt data
         return decrypt_data
 

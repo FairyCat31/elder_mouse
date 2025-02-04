@@ -1,9 +1,9 @@
 from disnake.ext import commands
 from app.scripts.cogs.DynamicConfig import DynamicConfigShape as DynConf
-from app.scripts.components.rconmanager import RconManager
-from app.scripts.components.logger import LogType
-from app.scripts.components.smartdisnake import SmartBot, SmartEmbed
-from app.scripts.components.jsonmanager import JsonManager, AddressType
+from app.scripts.utils.urcon import RconManager
+from app.scripts.utils.logger import LogType
+from app.scripts.utils.smartdisnake import SmartBot, SmartEmbed
+from app.scripts.utils.ujson import JsonManager, AddressType
 from app.scripts.cogs.BM.DBHelper import DBManagerForBoosty
 from disnake import Member, Role
 
@@ -11,7 +11,7 @@ from disnake import Member, Role
 class Sponsor:
     def __init__(self, bot: SmartBot, sponsor: Member, subscribe_role: Role):
         self.bot = bot
-        self.sponsor: Member = sponsor
+        self.discord: Member = sponsor
         self.subscribe_role: Role = subscribe_role
         # dyn vars for minecraft commands
         self.dyn_vars: dict = {}
@@ -37,15 +37,15 @@ class Sponsor:
     async def send_info_msg(self, msg_text: str) -> None:
         if not msg_text:
             return
-        channel = self.bot.get_channel(self.bot.props["dynamic_config/sub_channel"])
-        msg_text = msg_text.format(user_name=self.sponsor.name, role_name=self.sub.name)
+        channel = self.bot.get_channel(self.bot.props["dynamic_config/boosty_channel"])
+        msg_text = msg_text.format(user_name=self.discord.name, role_name=self.subscribe_role.name)
         await channel.send(msg_text)
 
     async def send_thx_embed(self, embed_name: str) -> None:
         embed_args = self.bot.props[f"embeds/{embed_name}"]
         embed = SmartEmbed(embed_args)
-        channel = self.bot.get_channel(self.bot.props["dynamic_config/sub_channel"])
-        await channel.send(content=self.sponsor.mention, embed=embed)
+        channel = self.bot.get_channel(self.bot.props["dynamic_config/boosty_channel"])
+        await channel.send(content=self.discord.mention, embed=embed)
 
     async def run_cmd_on_server(self, cmd_sessions: list) -> None:
         for data in cmd_sessions:
@@ -71,8 +71,8 @@ class BoostyManager(commands.Cog):
         self.boosty_jsm.load_from_file()
         self.boosty_roles_id = self.boosty_jsm["subs"].keys()
 
-        idcheck = self.db.get_minecraft_name(573129166132740096)
-        print(idcheck)
+    async def set_dynamic_vars(self, sponsor: Sponsor):
+        minecraft_name = self.db.get_minecraft_name(sponsor.discord.id)
 
     async def on_boosty_role_add(self, member: Member, new_role: Role):
         sponsor = Sponsor(self.bot, member, new_role)
@@ -106,7 +106,7 @@ class BoostyManager(commands.Cog):
                 break
 
         # check if edited role from boosty subs
-        if str(edited_role) not in self.boosty_roles_id:
+        if str(edited_role.id) not in self.boosty_roles_id:
             return
         print(edited_role.id, edited_role.name)
         # handling edit role event by special func for bot

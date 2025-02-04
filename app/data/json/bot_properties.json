@@ -1,7 +1,7 @@
 {
   "command_prefix": ".",
   "dynamic_config_file_name": "dyn_conf.json",
-  "cogs": ["cogs.Main", "cogs.DynamicConfig"],
+  "cogs": ["cogs.Main", "cogs.DynamicConfig", "cogs.BM.BoostyManager"],
   "def_phrases": {
     "start" : "Successful starting\nI logged as {user}\nStarting during: {during_time}",
     "FormatErrorDynConfig" : "Ошибка обновления параметра.\\nНе удалось преобразовать {value} в {data_type_need}",
@@ -16,6 +16,28 @@
   "buttons": {
   },
   "embeds": {
+    "sub_1": {
+      "title": "Спасибо за подписку",
+      "description": "))))",
+      "color": 15724113,
+      "fields": [
+        {
+          "name": "dddd",
+          "value": "dddd",
+          "inline": true
+        },
+        {
+          "name": "ddd",
+          "value": "dddd",
+          "inline": true
+        }
+      ],
+      "image": {"url": "https://i.imgur.com/o2mJJX6.jpeg"},
+      "thumbnail": {"url": "https://i.imgur.com/o2mJJX6.jpeg"},
+      "url": "https://boosty.to/",
+      "footer": {"icon_url": "https://i.imgur.com/o2mJJX6.jpeg", "text": "Старшая мышка"},
+      "timestamp": "2025-02-04T21:00:00.000Z"
+    }
   },
   "modals": {
   },

@@ -124,6 +124,35 @@ ALL START ARGS""")
         jsm.write_in_file()
 
     @staticmethod
+    def add_serv(db_data: dict):
+        jsm = JsonManagerWithCrypt(AddressType.CFILE, ".rcon_servers.crptjson")
+        jsm.load_from_file()
+        for name, data in db_data.items():
+            jsm[name] = data
+        jsm.write_in_file()
+
+    @staticmethod
+    def show_serv(name: str = ""):
+        jsm = JsonManagerWithCrypt(AddressType.CFILE, ".rcon_servers.crptjson")
+        jsm.load_from_file()
+        if name:
+            print(dumps(jsm[name], indent=2))
+        else:
+            print(dumps(jsm.buffer, indent=2))
+
+    @staticmethod
+    def del_serv(name: str = ""):
+        jsm = JsonManagerWithCrypt(AddressType.CFILE, ".rcon_servers.crptjson")
+        jsm.load_from_file()
+        b = jsm.buffer
+        if name:
+            del b[name]
+        else:
+            b = {}
+        jsm.buffer = b
+        jsm.write_in_file()
+
+    @staticmethod
     def test():
         pass
 
