@@ -14,8 +14,12 @@ echo "#           __/ |                               __/ |    #"
 echo "#          |___/                               |___/     #"
 echo "#                                                        #"
 echo "##########################################################"
-echo "\n"
-echo "DEV VERSION 3.1"
-python3 app/scripts/main.py -launch_bot --name=Test --debug_mode=True --advanced_logging=True
+echo "#                                                        #"
+echo "#           DEV VERSION 3.1   Linux startup              #"
+echo "#                                                        #"
+echo "##########################################################"
+
+# python3 app/scripts/main.py -launch_bot --name=Test --debug_mode=True --advanced_logging=True
+python3 app/scripts/main.py -show_db
 
 read -p "Press any key..."

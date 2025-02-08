@@ -2,6 +2,7 @@ import sqlite3
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.scripts.utils.ujson import JsonManagerWithCrypt, AddressType
+from urllib.parse import quote_plus
 from sqlalchemy import MetaData
 from app.scripts.factory.errors import DatabaseConnectionDataError, DatabaseNameError
 
@@ -43,6 +44,7 @@ class DBManager:
                 if data_for_conn.get(par) is None:
                     raise DatabaseConnectionDataError(database_name, par)
         data_for_conn["CONN_URL"] = db_type
+        data_for_conn["DB_PASS"] = quote_plus(data_for_conn["DB_PASS"])
         conn_url = self.get_url_by_dict(data_for_conn)
         print(conn_url)
         self.Engine = create_engine(url=conn_url, echo=echo, pool_size=5, max_overflow=10,)

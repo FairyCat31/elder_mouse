@@ -1,7 +1,12 @@
+from sqlalchemy import text
+
+from app.scripts.utils.DB.dbmanager import DBType
 from utils.ujson import AddressType, JsonManagerWithCrypt
+from utils.DB.dbmanager import DBManager
 from factory.errors import FactoryStartArgumentError
 from sys import argv as sys_argv
-from json import loads, dumps
+from json5 import loads
+from json import dumps
 from typing import Any
 import bot_manager
 
@@ -33,6 +38,7 @@ class ArgParser:
         elif value.replace('.', '', 1).isdigit():
             return float(value)
         elif value[0] == "[" or value[0] == "{":
+            print(value)
             return loads(value)
         elif value.lower() in ["true", "yes", "y"]:
             return True
@@ -85,8 +91,7 @@ class StartProcedures:
 
     @staticmethod
     def help():
-        print("""
-ALL START ARGS""")
+        pass
 
     @staticmethod
     def launch_bot(**kwargs):
@@ -154,7 +159,22 @@ ALL START ARGS""")
 
     @staticmethod
     def test():
-        pass
+        man = DBManager("test", DBType.MariaDB)
+        with man.Engine.connect() as conn:
+            result = conn.execute(text('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = "BASE TABLE"'))
+            print(result.fetchall())
+            result = conn.execute(text("""CREATE TABLE Persons (
+    ID int NOT NULL,
+    LastName varchar(255) NOT NULL,
+    FirstName varchar(255),
+    Age int,
+    PRIMARY KEY (ID)
+);"""))
+            conn.commit()
+            result = conn.execute(
+                text('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = "BASE TABLE"'))
+            print(result.fetchall())
+
 
 
 class Main:

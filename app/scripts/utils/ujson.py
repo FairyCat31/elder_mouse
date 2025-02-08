@@ -6,6 +6,7 @@ from dotenv import dotenv_values
 from json import load, dumps
 from typing import Any, List
 from os.path import exists
+from pathlib import Path
 
 
 PATH_CONFIG_JSON = "app/data/json/json_conf.json"
@@ -38,10 +39,12 @@ class JsonManager:
         # set path and name file
         if address_type:
             self._name = address
-            self._path = launch_path + self.json_config[address_type] + self._name
+            self._path = launch_path + self.json_config[address_type]
+
         else:
-            self._path = address
+            self._path = "\\".join(address.split("/")[:-1])
             self._name = self._path.split("/")[-1]
+        self._fullpath = self._path + self._name
         # create dict which will content all data from file.json
         self._buffer = {}
         if smart_create and not exists(self._path):
@@ -107,12 +110,13 @@ class JsonManager:
 
     # write all data from file to buffer
     def load_from_file(self) -> None:
-        with open(self._path, "r", encoding=self.json_config["encoding"]) as f:
+        with open(self._fullpath, "r", encoding=self.json_config["encoding"]) as f:
             self._buffer = load(f)
 
     # write all data from buffer to file
     def write_in_file(self) -> None:
-        with open(self._path, "w", encoding=self.json_config["encoding"]) as f:
+        Path(self._path).mkdir(parents=True, exist_ok=True)
+        with open(self._fullpath, "w", encoding=self.json_config["encoding"]) as f:
             f.write(dumps(self._buffer, indent=self.json_config["indent"]))
 
 
@@ -147,12 +151,13 @@ class JsonManagerWithCrypt(JsonManager):
         return crypter
 
     def write_in_file(self) -> None:
-        with open(self._path, "wb") as f:
+        Path(self._path).mkdir(parents=True, exist_ok=True)
+        with open(self._fullpath, "wb") as f:
             dict_as_encrypt_bytes = self._crypter.dict_encrypt(self._buffer)
             f.write(dict_as_encrypt_bytes)
 
     def load_from_file(self) -> None:
-        with open(self._path, "rb") as f:
+        with open(self._fullpath, "rb") as f:
             encrypt_dict_as_bytes = f.read()
             self._buffer = self._crypter.dict_decrypt(encrypt_dict_as_bytes)
 

@@ -95,7 +95,7 @@ class SmartEmbed(Embed):
             "author": super().set_author,
             "footer": super().set_footer,
             "image": super().set_image,
-
+            "fields": self.add_fields
         }
 
         super().__init__(title=cfg.get("title"),
@@ -103,13 +103,14 @@ class SmartEmbed(Embed):
                          url=cfg.get("url"),
                          color=cfg.get("color"))
 
-        if cfg.get("fields") is not None:
-            super().add_field(name=cfg.get("name"), value=cfg.get("value"), inline=cfg.get("inline"))
-
         for key in embed_funcs:
             if cfg.get(key) is None:
                 continue
             embed_funcs[key](**cfg[key])
+
+    def add_fields(self, embeds: List[dict]):
+        for embed in embeds:
+            super().add_field(name=embed.get("name"), value=embed.get("value"), inline=embed.get("inline"))
 
 
 class ButtonView(View):

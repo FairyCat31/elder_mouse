@@ -1,3 +1,5 @@
+from typing import List
+
 from disnake.ext import commands
 from app.scripts.cogs.DynamicConfig import DynamicConfigShape as DynConf
 from app.scripts.utils.urcon import RconManager
@@ -27,9 +29,9 @@ class Sponsor:
         boosty_jsm = JsonManager(AddressType.FILE, "boostysub.json")
         boosty_jsm.load_from_file()
         bonuses = {}
-        for bonus_name, bonus_data in boosty_jsm["subs/default"].items():
+        for bonus_name, bonus_data in boosty_jsm["subs/when_add/default"].items():
             bonuses.setdefault(bonus_name, bonus_data)
-        for bonus_name, bonus_data in boosty_jsm[f"subs/{role_id}"].items():
+        for bonus_name, bonus_data in boosty_jsm[f"subs/when_add/{role_id}"].items():
             bonuses[bonus_name] = bonus_data
 
         return bonuses
@@ -41,11 +43,14 @@ class Sponsor:
         msg_text = msg_text.format(user_name=self.discord.name, role_name=self.subscribe_role.name)
         await channel.send(msg_text)
 
-    async def send_thx_embed(self, embed_name: str) -> None:
-        embed_args = self.bot.props[f"embeds/{embed_name}"]
-        embed = SmartEmbed(embed_args)
+    async def send_thx_embed(self, embed_names: List[str]) -> None:
+        embeds = []
+        for embed_name in embed_names:
+            embed_args = self.bot.props[f"embeds/{embed_name}"]
+            embed = SmartEmbed(embed_args)
+            embeds.append(embed)
         channel = self.bot.get_channel(self.bot.props["dynamic_config/boosty_channel"])
-        await channel.send(content=self.discord.mention, embed=embed)
+        await channel.send(content=self.discord.mention, embeds=embeds)
 
     async def run_cmd_on_server(self, cmd_sessions: list) -> None:
         for data in cmd_sessions:
