@@ -19,8 +19,6 @@ class RawRconManager:
             "port": port,
             "password": password
         }
-        code, res = self.test_connect()
-        self.code, self.res = code, res
 
     async def test_connect(self) -> (int, str):  # func for test connection
         try:
@@ -40,7 +38,7 @@ class RawRconManager:
     def rcon_connect(func):
         async def wrapper(self, *args, **kwargs):
             async with Client(**self.__connect_data) as client:
-                func(client, *args, **kwargs)
+                return await func(self, client, *args, **kwargs)
         return wrapper
 
 
@@ -50,9 +48,9 @@ class RconManager(RawRconManager):
     """
     def __init__(self, name_server: str):
         """
-        name_server - server name from file rcon_servers.crptjson
+        name_server - server name from file .rcon_servers.crptjson
         """
-        jsm = JsonManagerWithCrypt(AddressType.CFILE, "rcon_servers.crptjson")
+        jsm = JsonManagerWithCrypt(AddressType.CFILE, ".rcon_servers.crptjson")
         jsm.load_from_file()
         server_conn_data = jsm.buffer.get(name_server)
         if server_conn_data is None:
