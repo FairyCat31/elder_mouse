@@ -129,10 +129,10 @@ class StartProcedures:
         jsm.write_in_file()
 
     @staticmethod
-    def add_serv(db_data: dict):
+    def add_serv(serv_data: dict):
         jsm = JsonManagerWithCrypt(AddressType.CFILE, ".rcon_servers.crptjson")
         jsm.load_from_file()
-        for name, data in db_data.items():
+        for name, data in serv_data.items():
             jsm[name] = data
         jsm.write_in_file()
 
@@ -159,20 +159,38 @@ class StartProcedures:
 
     @staticmethod
     def test():
-        man = DBManager("test", DBType.MariaDB)
+        from app.scripts.cogs.BM.DBHelper import DBManagerForBoosty
+
+        man = DBManagerForBoosty()
         with man.Engine.connect() as conn:
-            result = conn.execute(text('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = "BASE TABLE"'))
-            print(result.fetchall())
-            result = conn.execute(text("""CREATE TABLE Persons (
-    ID int NOT NULL,
-    LastName varchar(255) NOT NULL,
-    FirstName varchar(255),
-    Age int,
-    PRIMARY KEY (ID)
-);"""))
+            # result = conn.execute(text('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = "BASE TABLE"'))
+            # print(result.fetchall())
+#             conn.execute(text("""CREATE TABLE users (
+#     id int NOT NULL,
+#     ds_id varchar(36) NOT NULL,
+#     name varchar(255),
+#     PRIMARY KEY (ID)
+# );"""))
+#             conn.execute(text("""INSERT INTO
+#             users (id, ds_id, name)
+#             VALUES(1, '1008466771059150978', 'CosTanTan');"""))
+#             conn.execute(text("""CREATE TABLE users (
+#             #     id int NOT NULL,
+#             #     ds_id varchar(36) NOT NULL,
+#             #     name varchar(255),
+#             #     PRIMARY KEY (ID)
+#             # );"""))
+#             conn.execute(text("""CREATE TABLE IF NOT EXISTS sponsors (
+#                 id INTEGER PRIMARY KEY AUTO_INCREMENT,
+#                 ds_id INTEGER NOT NULL,
+#                 minecraft_name VARCHAR(16) NOT NULL,
+#                 sponsor_role INTEGER NOT NULL,
+#                 own_role INTEGER UNIQUE DEFAULT -1,
+#                 mine_bonuses_status TINYINT(1) DEFAULT 0);"""))
             conn.commit()
-            result = conn.execute(
-                text('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = "BASE TABLE"'))
+            result = conn.execute(text('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = "BASE TABLE"'))
+            # result = conn.execute(
+            #     text('SELECT * FROM users'))
             print(result.fetchall())
 
 
