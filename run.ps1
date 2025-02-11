@@ -1,7 +1,5 @@
-#!/bin/bash
-
-source env/bin/activate
-export PYTHONPATH=$(pwd)
+env/Scripts/activate.ps1
+$env:PYTHONPATH = $PWD.Path
 echo "##########################################################"
 echo "#                                                        #"
 echo "#    ______       ______         _                       #"
@@ -15,14 +13,12 @@ echo "#          |___/                               |___/     #"
 echo "#                                                        #"
 echo "##########################################################"
 echo "#                                                        #"
-echo "#           DEV VERSION 3.1   Linux startup              #"
+echo "#           DEV VERSION 3.1   Windows startup            #"
 echo "#                                                        #"
 echo "##########################################################"
 
 # python3 app/scripts/main.py -launch_bot --name=Test --debug_mode=True --advanced_logging=True
-# python3 app/scripts/main.py -add_serv --serv_data='{"me":{"host": "localhost", "port": 25575, "password": "sosalubomjaovoch"}}'
-python3 app/scripts/main.py -show_serv -show_db -launch_bot --name=Test --debug_mode=True --advanced_logging=True
-#python3 app/scripts/main.py -test
-
-
-read -p "Press any key..."
+#python app/scripts/main.py -show_db -add_db --db_data="{'test':{'DB_NAME': 'pyth_database', 'DB_HOST':'89.46.131.209', 'DB_PORT':3306, 'DB_USER':'pyth', 'DB_PASS':'7vd6aOgn2808POd@QVoZmIXYzpSjrO~9@~RC@P4kIYgO5w6p0YJzuL}wNw8n}3ObEyWRnIrj'}}" -show_db
+#python app/scripts/main.py -launch_bot --name="Elder Mouse" --debug_mode=True --advanced_logging=True
+python app/scripts/main.py -test
+pause
