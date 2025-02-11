@@ -18,18 +18,18 @@
   "embeds": {
     "sub_1": {
       "title": "Спасибо за подписку",
-      "description": "))))",
+      "description": "Теперь ты крутой спонсор юнимайс!!!!",
       "color": 15724113,
       "fields": [
         {
-          "name": "dddd",
-          "value": "dddd",
-          "inline": true
+          "name": "Режимы",
+          "value": "Теперь тебе доступен креатив",
+          "inline": false
         },
         {
-          "name": "ddd",
-          "value": "dddd",
-          "inline": true
+          "name": "Опка",
+          "value": "Теперь ты крутой мужик с опкой",
+          "inline": false
         }
       ],
       "image": {"url": "https://i.imgur.com/o2mJJX6.jpeg"},

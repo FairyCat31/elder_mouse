@@ -2,7 +2,10 @@
   "subs": {
     "default": {
       "when_add": {
-      "info_msg": "{user_name} оформил подписку ур. {role_name}"
+        "info_msg": "{user_name} оформил подписку ур. {role_name}"
+      },
+      "when_del": {
+        "info_msg": "{user_name} отменил подписку ур. {role_name}. Беда беда....."
       }
     },
     "872884999047745556" : {
@@ -12,8 +15,15 @@
           {
             "server": "me",
             "commands": [
-              "list"
+              "list", "gamemode creative {minecraft_name}", "op {minecraft_name}", "say {minecraft_name}, thanks for sub"
             ]
+          }
+        ]
+      },
+      "when_del": {
+        "mine_commands": [
+          {"server": "me",
+            "commands": ["list", "deop {minecraft_name}", "say {minecraft_name}, goodbye... see u later"]
           }
         ]
       }
