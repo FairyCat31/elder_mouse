@@ -136,8 +136,7 @@ class JsonManagerWithCrypt(JsonManager):
 
         super().__init__(address_type=address_type, address=address, smart_create=False)
         self._crypter = self.__crypter_init(crypt_key)
-
-        if smart_create and not exists(self._path):
+        if smart_create and not exists(self._path + self._name):
             self.write_in_file()
 
     def __crypter_init(self, crypt_key: bytes | None, encoding="latin1") -> Crypter:  # method for creating crypter

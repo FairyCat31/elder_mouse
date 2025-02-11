@@ -3,6 +3,7 @@ from app.scripts.utils.ujson import JsonManager, AddressType
 from sys import stdout, path as sys_path
 from typing import TextIO
 from colorama import init, Fore, Style
+from pathlib import Path
 init()
 
 launch_path = sys_path[1]
@@ -78,7 +79,9 @@ class Logger:
         # check if change the date
         if self.__old_date != new_date:
             # create new file
-            self.__path_to_log_file = f"{launch_path}/{self.cfg['default_path']}{self.name}_{new_date}.txt"
+            fullpath = f"{launch_path}/{self.cfg['default_path']}"
+            Path(fullpath).mkdir(parents=True, exist_ok=True)
+            self.__path_to_log_file = f"{fullpath}{self.name}_{new_date}.txt"
             with open(self.__path_to_log_file, "w", encoding=self.cfg["encoding"]) as file:
                 file.write(f"Logger version | Log of module --> {self.name}\n")
             self.__old_date = new_date
