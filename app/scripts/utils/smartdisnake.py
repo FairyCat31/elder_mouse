@@ -94,14 +94,16 @@ class SmartEmbed(Embed):
             "thumbnail": super().set_thumbnail,
             "author": super().set_author,
             "footer": super().set_footer,
-            "image": super().set_image,
-            "fields": self.add_fields
+            "image": super().set_image
         }
 
         super().__init__(title=cfg.get("title"),
                          description=cfg.get("description"),
                          url=cfg.get("url"),
                          color=cfg.get("color"))
+
+        if cfg.get("fields") is not None:
+            self.add_fields(cfg.get("fields"))
 
         for key in embed_funcs:
             if cfg.get(key) is None:
