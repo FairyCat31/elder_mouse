@@ -1,7 +1,8 @@
 from app.scripts.utils.DB.dbmanager import DBManager, DBType
 from app.scripts.cogs.BM.models import User, Sponsor
 from sqlalchemy.orm import Session
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, update, delete
+from typing import List
 
 
 class DBManagerForBoosty(DBManager):
@@ -27,19 +28,31 @@ class DBManagerForBoosty(DBManager):
     # );
 
     @DBManager.db_session
-    def set_sponsor(self, session: Session,
-                         ds_id: int,
-                         minecraft_name: str,
-                         sponsor_role: int,
-                         own_role: int,
-                         mine_bonuses_status: bool
-                         ) -> None:
-        stmt = insert(Sponsor).values(ds_id=ds_id, minecraft_name=minecraft_name, sponsor_role=sponsor_role,
-                                      mine_bonuses_status=mine_bonuses_status, own_role=own_role)
-        session.scalars(stmt)
+    def save_sponsor(self, session: Session, sponsor) -> None:
+        ds_id = sponsor.discord.id
+        sponsor_role = sponsor.subscribe_role.id
+        minecraft_name = session.scalar(select(User.name).where(User.ds_id == ds_id))
+
+        stmt = insert(Sponsor).values(ds_id=ds_id, sponsor_role=sponsor_role, minecraft_name=minecraft_name)
+        session.execute(stmt)
+        session.commit()
 
     @DBManager.db_session
-    def get_sponsor(self, session: Session, ds_id: int = None) -> list:
+    def update_sponsor(self, session: Session, sponsor) -> None:
+        ds_id = sponsor.discord.id
+        sponsor_role = sponsor.subscribe_role.id
+        own_role = sponsor.own_role.id
+        mine_cmds_status = sponsor.mine_cmds_status
+
+        stmt = (update(Sponsor).values(
+            sponsor_role=sponsor_role,
+            own_role=own_role,
+            mine_bonuses_status=mine_cmds_status).where(Sponsor.ds_id == ds_id))
+        session.execute(stmt)
+        session.commit()
+
+    @DBManager.db_session
+    def get_sponsor(self, session: Session, ds_id: int = None) -> List[Sponsor]:
         stmt = select(Sponsor)
 
         if ds_id is not None:
@@ -49,3 +62,9 @@ class DBManagerForBoosty(DBManager):
 
         return result
 
+    @DBManager.db_session
+    def del_sponsor(self, session: Session, sponsor) -> None:
+        stmt = delete(Sponsor).where(Sponsor.ds_id == sponsor.discord.id)
+
+        session.execute(stmt)
+        session.commit()

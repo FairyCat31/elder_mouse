@@ -149,7 +149,8 @@ class DynamicConfigShape(commands.Cog):
         # update new config in bot json_manager
         self.__update_dynamic_config()
         # log what all ok
-        self.bot.log.printf(self.bot.props["def_phrases/ConsoleEditInfo"].format(parameter=parameter, value=value))
+        self.bot.log.printf(self.bot.props["def_phrases/ConsoleEditInfo"].format(parameter=parameter,
+                                                                                 convert_value=value))
 
     # print all params in discord
     async def config_show(self, inter: ApplicationCommandInteraction) -> None:
