@@ -89,7 +89,8 @@ class SmartRegModal(Modal):
 
 
 class SmartEmbed(Embed):
-    def __init__(self, cfg: dict):
+    def __init__(self, cfg: dict, dyn_vars: Dict[str, str]):
+        self.dyn_vars = dyn_vars
         embed_funcs = {
             "thumbnail": super().set_thumbnail,
             "author": super().set_author,
@@ -97,13 +98,18 @@ class SmartEmbed(Embed):
             "image": super().set_image
         }
 
-        super().__init__(title=cfg.get("title"),
-                         description=cfg.get("description"),
-                         url=cfg.get("url"),
-                         color=cfg.get("color"))
+        init_args = {"color": cfg.get("color"), "url": cfg.get("url")}
+        for arg in ["title", "description"]:
+            value: str = cfg.get(arg)
+            if value is not None:
+                value = value.format(**dyn_vars)
+            init_args[arg] = value
+
+
+        super().__init__(**init_args)
 
         if cfg.get("fields") is not None:
-            self.add_fields(cfg.get("fields"))
+            self.add_fields(cfg["fields"])
 
         for key in embed_funcs:
             if cfg.get(key) is None:
@@ -112,7 +118,9 @@ class SmartEmbed(Embed):
 
     def add_fields(self, embeds: List[dict]):
         for embed in embeds:
-            super().add_field(name=embed.get("name"), value=embed.get("value"), inline=embed.get("inline"))
+            super().add_field(name=embed["name"].format(**self.dyn_vars),
+                              value=embed["value"].format(**self.dyn_vars),
+                              inline=embed.get("inline"))
 
 
 class ButtonView(View):

@@ -163,35 +163,35 @@ class StartProcedures:
 
         man = DBManagerForBoosty()
         with man.Engine.connect() as conn:
-            # result = conn.execute(text('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = "BASE TABLE"'))
-            # print(result.fetchall())
-#             conn.execute(text("""CREATE TABLE users (
-#     id int NOT NULL,
-#     ds_id varchar(36) NOT NULL,
-#     name varchar(255),
-#     PRIMARY KEY (ID)
-# );"""))
-#             conn.execute(text("""INSERT INTO
-#             users (id, ds_id, name)
-#             VALUES(1, '1008466771059150978', 'CosTanTan');"""))
-#             conn.execute(text("""CREATE TABLE users (
-#             #     id int NOT NULL,
-#             #     ds_id varchar(36) NOT NULL,
-#             #     name varchar(255),
-#             #     PRIMARY KEY (ID)
-#             # );"""))
-#             conn.execute(text("""CREATE TABLE IF NOT EXISTS sponsors (
-#                 id INTEGER PRIMARY KEY AUTO_INCREMENT,
-#                 ds_id INTEGER NOT NULL,
-#                 minecraft_name VARCHAR(16) NOT NULL,
-#                 sponsor_role INTEGER NOT NULL,
-#                 own_role INTEGER UNIQUE DEFAULT -1,
-#                 mine_bonuses_status TINYINT(1) DEFAULT 0);"""))
+            conn.execute(text("DROP TABLE sponsors;"))
             conn.commit()
-            result = conn.execute(text('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = "BASE TABLE"'))
-            # result = conn.execute(
-            #     text('SELECT * FROM users'))
-            print(result.fetchall())
+            conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS sponsors (
+            id INTEGER PRIMARY KEY AUTO_INCREMENT,
+            ds_id BIGINT NOT NULL,
+            minecraft_name VARCHAR(16),
+            sponsor_role BIGINT NOT NULL,
+            own_role INTEGER DEFAULT -1,
+            mine_bonuses_status TINYINT(1) DEFAULT 0
+            );"""))
+            conn.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS set_mine_name
+            AFTER INSERT ON users
+            FOR EACH ROW
+            BEGIN
+                UPDATE sponsors
+                SET minecraft_name = NEW.name
+                WHERE ds_id = NEW.ds_id;
+            END;"""))
+            #conn.execute(text("INSERT INTO users (id, ds_id, name) VALUES (1008466771059150978, 'lohi');"))
+            conn.commit()
+            queries =  [#"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'users'",
+                       #"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sponsors'",
+                       "SELECT * FROM users",
+                       "SELECT * FROM sponsors"]
+            for query in queries:
+                result = conn.execute(text(query))
+                print(result.fetchall())
 
 
 
