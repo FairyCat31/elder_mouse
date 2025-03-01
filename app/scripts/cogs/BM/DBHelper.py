@@ -41,7 +41,7 @@ class DBManagerForBoosty(DBManager):
     def update_sponsor(self, session: Session, sponsor) -> None:
         ds_id = sponsor.discord.id
         sponsor_role = sponsor.subscribe_role.id
-        own_role = sponsor.own_role.id
+        own_role = sponsor.own_role.id if sponsor.own_role is not None else -1
         mine_cmds_status = sponsor.mine_cmds_status
 
         stmt = (update(Sponsor).values(
